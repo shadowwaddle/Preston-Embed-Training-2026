@@ -81,6 +81,9 @@ BNO055::BNO055(I2C &i2c, uint8_t addr, PinName p_reset) noexcept
 // Init function, not sure if just setting it to normal power is all I need to do...
 void BNO055::init() noexcept 
 {
+    _i2c.frequency(400000);
+    reset();
+
     // Set power to normal
     dt[0] = BNO055_PWR_MODE;
     dt[1] = BNO055_PWR_MODE_NORMAL;
