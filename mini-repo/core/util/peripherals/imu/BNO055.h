@@ -90,4 +90,5 @@ private:
 // Quaternion data registers
 #define BNO055_QUATERNION_W_LSB 0x20
 
+
 #endif
