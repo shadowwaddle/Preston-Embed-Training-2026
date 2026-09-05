@@ -303,6 +303,7 @@ public:
 
     ChassisSpeeds desiredChassisSpeeds;
     WheelSpeeds desiredWheelSpeeds;
+    WheelSpeeds desiredWheelPower; // added this
 
     OmniKinematicsLimits m_OmniKinematicsLimits;
     WheelSpeeds chassisSpeedsToWheelSpeeds(ChassisSpeeds chassisSpeeds);

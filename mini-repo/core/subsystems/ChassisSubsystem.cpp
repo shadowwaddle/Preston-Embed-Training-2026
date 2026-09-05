@@ -57,6 +57,21 @@ ChassisSubsystem::ChassisSubsystem(const Config &config)
 //TODO: Implement setWheelSpeeds to set the speed of each wheel based on the desired wheel speeds. 
 void ChassisSubsystem::setWheelSpeeds(WheelSpeeds wheelSpeeds)
 {
+    desiredWheelSpeeds = wheelSpeeds;
+    LF.setSpeed(desiredWheelSpeeds.LF);
+    RF.setSpeed(desiredWheelSpeeds.RF);
+    LB.setSpeed(desiredWheelSpeeds.LB);
+    RB.setSpeed(desiredWheelSpeeds.RB);
+}
+
+//Also implementing setWheelPower
+void ChassisSubsystem::setWheelPower(WheelSpeeds wheelPower)
+{
+    desiredWheelPower = wheelPower;
+    LF.setPower(desiredWheelPower.LF);
+    RF.setPower(desiredWheelPower.RF);
+    LB.setPower(desiredWheelPower.LB);
+    RB.setPower(desiredWheelPower.RB);
 
 }
 
@@ -67,10 +82,15 @@ void ChassisSubsystem::setChassisSpeeds(ChassisSpeeds desiredChassisSpeeds_, DRI
     {   //TODO: Figure this out 
 
         // Consider the following: Updating Yaw Current
-
+        yawCurrent = encoder->encoderMovingAverage(); // grab yaw value
         // Account for rollover at 360 degrees
-
+        if(yawCurrent < 0) {
+            yawCurrent += 360.0;
+        } else if(yawCurrent > 360.0) {
+            yawCurrent -= 360.0;
+        }
         // remember your rotate ChassisSpeeds
+        //desiredChassisSpeeds = rotateChassisSpeed(ChassisSpeeds speeds, double yawCurrent) finish this later
     }
     else if (mode == ROBOT_ORIENTED)
     {
@@ -117,7 +137,7 @@ void ChassisSubsystem::setChassisSpeeds(ChassisSpeeds desiredChassisSpeeds_, DRI
         float yaw_velo = (yawCurrent - yawPrior);
         float deg2rad = PI/180; // convert to rad and just run at 2x that rad/s
         pid_align.feedForward = yaw_velo * yaw_velo_gain;
-        float omegaCmd = pid_align.calculatePeriodic(yawError, 1000) * deg2rad;
+        float omegaCmd = pid_align.Periodic(yawError, 1000) * deg2rad;
 
         if (abs(omegaCmd) < 0.1) omegaCmd = 0;
 
