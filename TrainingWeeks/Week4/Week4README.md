@@ -12,7 +12,7 @@ In control system theory a block diagram might look something like this:
 
 Essentially the idea behind controls is that u have a certain input (signal/trajectory) and your plant will react to that input signal in a certain way. This is called the output signal or the behavior of the system. 
 
-What a controller allows u to do is to follow the trajectory of the input signal as best as possible given the behavior of your plant. The combined controller and plant is called a system. Basically, you want your head to turn 90 degrees, and a controller will change that from "90 degrees" to something ur motor can understand for it to turn 90 :D
+What a controller allows u to do is to follow the trajectory of the input signal as best as possible given the behavior of your plant. The combined controller and plant is called a system. Basically, you want your head to turn 90 degrees, and a controller will help the mtoro achieve this accurately and reliably. :D
 
 ## Why?
 
@@ -24,7 +24,7 @@ This is an example of slow, unresponsive controls, we dont rly want this.
 
 ![Bad controls](Assets/bad_controls.gif)
 
-When we want any physical system to respond the way we want, we need to make sure we have code written to convert our commands into something (usually a power/current) which the motor can understand. This is where controls comes in.
+Physical systems have characteristics that make it harder for our mechanisms to achieve our goals reliably. For example, we may want to quickly drive from point A to point B, but friction and tire slip make us move slowly and unpredictably. When we want any physical system to respond the way we want, we need to make sure we have code written to convert our commands into something (usually a power/current) which the motor can understand and follow accurately/reliably. This is where controls comes in.
 
 Now 🤓, we want to control a system to satisfy many objective metrics: 
 
@@ -39,6 +39,8 @@ Well the most obvious benefit we can see is going to be good aim/CV, since good 
 Secondly, a very important benefit that most people dont really think about for controls is the chassis motors. Good chassis controls exponentially improves our movement and helps significantly in ensuring accurate odometry.
 
 So, the whole robot works smoother and feels more responsive when we have good controls (See: our robots looking snappy)
+
+In general, good controls give our robots reliability and predictability that our team can lean on in competition. Particularly, in the context of competition, having reliable robots is key to success.
 
 ![Good controls](Assets/good_controls.gif)
 
@@ -110,9 +112,84 @@ The derivative has set our output to be 10.416. Derivative is meant to dampen a 
 
 <!-- _Note that since we are working with a *discrete* error function we need to use [numerical differentiation](https://en.wikipedia.org/wiki/Numerical_differentiation) methods_ -->
 
+## The Step Response
+In identifying our system, (how it works and how it responds to different inputs) the step response is one of the fundamental tools that we have. Broadly, the step response helps us visualize how our system responds to an instantaneous change in our input. Typically, we use the unit step response because of its simplicity.
+
+When we input this signal into our system, we can then analyze how our system responds and reacts. Ideall, we would want the system output to match the system input. That is, if I command my motor to position 1 instantaneously, my motor instantaneously moves to this position. In reality, this isn't possible, but using controls we can optimize this performance. Look at the graph below, you can see how different control signals can imapct the step response.
+
+![Step Response](Assets/step_response.gif)
+
 
 ## Your assignment
 
 What we want you to do is use the simulink file (mini-repo/tuning/pid-tuning.simulink or sm) and mainfile (mini-repo/robots/tuning-testbench.cpp) to tune a motor on our testbed yaw, using imu data which you can get from your week 2 assignment. You will need to go into the garage, and talk to Arjun/Dil about giving you the testbed and a motor to tune.
+### Exercise 1 - P on its own
 
-Good luck after that LOL (need to fill this section out)
+Set ki = 0, kd = 0, DISTURBANCE = 0, SETPOINT = 20, then:
+
+matlab
+>> pid_playground('sweep', 'kp', [0.005 0.01 0.02 0.04 0.08])
+
+Before you look at the answer, predict: what happens to rise time as Kp goes up? What happens to overshoot?
+
+### Exercise 2 - Add kD Term
+
+Set kp = 0.04 (the fast-but-ringing one), leave ki = 0, DISTURBANCE = 0, SETPOINT = 20, then:
+
+matlab
+>> pid_playground('sweep', 'kd', [0 0.002 0.004 0.008 0.016 0.03])
+
+### Exercise 3 - Recalibrate kP
+
+By adding a kD term, we also gained stability in our system, so we can push the bounds of our kP term
+
+Set kd = 0.008, ki = 0, DISTURBANCE = 0, SETPOINT = 20:
+
+matlab
+>> pid_playground('sweep', 'kp', [0.04 0.08 0.15 0.25])
+
+Discuss your results.
+
+### Exercise 4 - Adding the kI Term
+
+So far, nothing has been fighting us. Now turn on the disturbance. You cam imagine this as the chassis  spinning at t = 1 s and dragging the turret with it.
+
+Set kp = 0.15, kd = 0.008, DISTURBANCE = 0.20, SETPOINT = 20:
+
+matlab
+>> pid_playground('sweep', 'ki', [0 0.2 0.5 1 2 4])
+
+Disucss your results.
+
+### Exercise 5 - Difference between measurement and actual
+
+Remember that staircase from pid_playground('imu'). The D term is estimating an error rate by differencing that signal and differencing a noisy, stair-stepped measurement gives you mostly noise.
+
+Set kp = 0.15, ki = 0.5, DISTURBANCE = 0, SETPOINT = 20, and watch the chatter column (how twitchy the motor command is):
+
+matlab
+>> pid_playground('sweep', 'kd', [0.008 0.02 0.05 0.10])
+
+### Exercise 6 - Tuning On Your Own
+
+Now do it yourself. Set DISTURBANCE = 0.20 and SETPOINT = 20, and find gains that meet all three at once:
+
+Requirement	Limit
+1.	Overshoot	≤ 15%
+2.	Settling time into ±1°	≤ 0.70 s
+3.	Final error	≤ 0.40°
+
+### General Questions
+1. Your turret settles 2° short of the target every time and stays there. Which term is missing, and why does adding it fix this specifically?
+2. Why is "add D, then raise P again" better than just picking a Kp and adding D once?
+3. Your IMU only publishes a new reading every 10 ms, but your control loop runs every 1 ms. What is the D term looking at on the nine ticks in between?
+
+### Advice
+
+If the response is slow & never overshoots, Kp is too low
+If the response overshoots then settles, not enough kD.	Add Kd first before touching Kp
+If the response oscillates forever at the same size,	Kp is too high. try a lower Kp, and if needed, add Kd
+If you have a small oscillation that grows, lower Ki
+If the response Settles at the wrong angle and stays & there's no I term, add Ki
+If the response is too slow even though Kp is big,	Lower Kd; check the command panel (make sure motor isn't maxed out)
+If the rise time won't improve no matter what,	motor is saturated (hardware limit)
