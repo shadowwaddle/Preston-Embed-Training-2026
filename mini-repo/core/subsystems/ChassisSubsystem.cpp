@@ -89,8 +89,9 @@ void ChassisSubsystem::setChassisSpeeds(ChassisSpeeds desiredChassisSpeeds_, DRI
         } else if(yawCurrent > 360.0) {
             yawCurrent -= 360.0;
         }
-        // remember your rotate ChassisSpeeds
-        //desiredChassisSpeeds = rotateChassisSpeed(ChassisSpeeds speeds, double yawCurrent) finish this later
+        //remember your rotate ChassisSpeeds
+        desiredChassisSpeeds = rotateChassisSpeed(ChassisSpeeds speeds, double yawCurrent);
+        
     }
     else if (mode == ROBOT_ORIENTED)
     {
@@ -98,7 +99,7 @@ void ChassisSubsystem::setChassisSpeeds(ChassisSpeeds desiredChassisSpeeds_, DRI
     }
     else if (mode == ODOM_ORIENTED) 
     {
-        yawCurrent = encoder->encoderMovingAverage();
+       yawCurrent = encoder->encoderMovingAverage();
         if (yawCurrent < 0.0) {
             yawCurrent += 360.0;
         }

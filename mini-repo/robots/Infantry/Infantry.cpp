@@ -201,6 +201,15 @@ class Infantry : public BaseRobot {
             des_turret_state.turret_mode = AIM;
             des_turret_state.pitch_angle_degs = pitch_desired_angle;
             des_turret_state.yaw_angle_degs = yaw_desired_angle; 
+        } else if(remote_.getMode() == DJIRemote2::ModeSwitch::MODE_S) {
+            // YAW_ORIENTED mode
+            des_chassis_state.vOmega = 0;
+
+            chassis_.setChassisSpeeds(des_chassis_state, ChassisSubsystem::YAW_ORIENTED);
+            // AIM mode
+            des_turret_state.turret_mode = AIM;
+            des_turret_state.pitch_angle_degs = pitch_desired_angle;
+            des_turret_state.yaw_angle_degs = yaw_desired_angle; 
         } else {
             // Neutral state
             chassis_.setWheelPower(neutralPower);
