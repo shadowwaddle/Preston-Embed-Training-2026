@@ -90,8 +90,7 @@ void ChassisSubsystem::setChassisSpeeds(ChassisSpeeds desiredChassisSpeeds_, DRI
             yawCurrent -= 360.0;
         }
         //remember your rotate ChassisSpeeds
-        desiredChassisSpeeds = rotateChassisSpeed(ChassisSpeeds speeds, double yawCurrent);
-        
+        desiredChassisSpeeds = rotateChassisSpeed(desiredChassisSpeeds_, yawCurrent);
     }
     else if (mode == ROBOT_ORIENTED)
     {
@@ -138,7 +137,7 @@ void ChassisSubsystem::setChassisSpeeds(ChassisSpeeds desiredChassisSpeeds_, DRI
         float yaw_velo = (yawCurrent - yawPrior);
         float deg2rad = PI/180; // convert to rad and just run at 2x that rad/s
         pid_align.feedForward = yaw_velo * yaw_velo_gain;
-        float omegaCmd = pid_align.Periodic(yawError, 1000) * deg2rad;
+        float omegaCmd = pid_align.calculatePeriodic(yawError, 1000) * deg2rad;
 
         if (abs(omegaCmd) < 0.1) omegaCmd = 0;
 
