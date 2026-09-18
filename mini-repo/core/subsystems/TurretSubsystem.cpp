@@ -99,8 +99,8 @@ void TurretSubsystem::periodic(float chassisRpm)
     if (turret_state.turret_mode == SLEEP)
     {
         // Not sure if sleep mode means zero power like neutral, or actually stopped...
-        yaw.setSpeed(0);
-        pitch.setSpeed(0);
+        yaw.setPower(0);
+        pitch.setPower(0);
     }
     else if (turret_state.turret_mode == AIM) 
     {
@@ -112,9 +112,9 @@ void TurretSubsystem::periodic(float chassisRpm)
             
             // NAN value because of a bad IMU read or something along those lines
             //TODO: What should the motors be doing?
-            // Turn motor power to zero if get a bad read
-            yaw.setPower(0);
-            pitch.setPower(0);
+            // Set speed to zero if get a bad read
+            yaw.setSpeed(0);
+            pitch.setSpeed(0);
             // Week 4/5 TODO: what should the PIDs do if we get a NAN? 
 
             return;

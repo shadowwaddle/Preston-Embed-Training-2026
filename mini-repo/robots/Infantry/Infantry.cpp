@@ -186,32 +186,29 @@ class Infantry : public BaseRobot {
 
         // Turret from remote
         // TODO: IMPLEMENT TURRET LOGIC HERE (Hint: update desired pitch and yaw from remote readings)
-        pitch_desired_angle += jpitch;
-        yaw_desired_angle += jyaw;
+        pitch_desired_angle -= jpitch * JOYSTICK_PITCH_SENSITIVITY_DPS * (dt_us / 1000000.0f);  // Need to multiply by the pitch and yaw sensitivities as well
+        yaw_desired_angle -= jyaw * JOYSTICK_YAW_SENSITIVITY_DPS * (dt_us / 1000000.0f);
 
-        if(remote_.getMode() == DJIRemote2::ModeSwitch::MODE_C)
-        {
-            des_turret_state.turret_mode = SLEEP;
-            des_turret_state.pitch_angle_degs = 0;
-            des_turret_state.yaw_angle_degs = 0;
-        } 
-        else if(remote_.getMode() == DJIRemote2::ModeSwitch::MODE_N) 
-        {
-            des_turret_state.turret_mode = AIM;
-            des_turret_state.pitch_angle_degs = pitch_desired_angle;
-            des_turret_state.yaw_angle_degs = yaw_desired_angle; 
-        }
-
-
-
+        yaw_desired_angle = capAngle(yaw_desired_angle);
+        pitch_desired_angle = std::clamp(pitch_desired_angle, PITCH_LOWER_BOUND, PITCH_UPPER_BOUND);
         // Chassis logic
         // TODO: ADD THE CHASSIS LOGIC HERE
         if (remote_.getMode() == DJIRemote2::ModeSwitch::MODE_N) {
             // ROBOT_ORIENTED mode
             chassis_.setChassisSpeeds(des_chassis_state, ChassisSubsystem::ROBOT_ORIENTED);
+            
+            // AIM mode
+            des_turret_state.turret_mode = AIM;
+            des_turret_state.pitch_angle_degs = pitch_desired_angle;
+            des_turret_state.yaw_angle_degs = yaw_desired_angle; 
         } else {
             // Neutral state
             chassis_.setWheelPower(neutralPower);
+
+            // Turret SLEEP mode
+            des_turret_state.turret_mode = SLEEP;
+            des_turret_state.pitch_angle_degs = 0;
+            des_turret_state.yaw_angle_degs = 0;
         }
 
 
